@@ -8,7 +8,6 @@ import java.util.ArrayList;
 public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
 
     final int ONE = 1;  // учет 1 того, что числа считаются от 0 ONE= 1;
-    final int ROWS_ON_PLANE = 127; // ряды в самолете (от 0 до 127, всего 128)
     final int TWO = 2;
 
     @Override
@@ -22,66 +21,91 @@ public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
 
         int desiredRow = 0;
         int desiredColumn = 0;
+        final int countLine = linesArrList.size();
+        int highestId = 0;
 
+        // пройти по всем строкам
+        for (int indexLine = 0; indexLine < countLine; indexLine++) {
 
-        // получить значение строки в самолете из 0-127
-        desiredRow = getRow_1(linesArrList);
+            // получить значение строки в самолете из 0-127
+            String currentLine = linesArrList.get(indexLine);
+            desiredRow = getRow_1(currentLine);
+            desiredColumn = getColunm_1(currentLine);
 
+            // получить идентификатор по указанным условиям
+            highestId = getHighestId_part1(highestId, desiredRow, desiredColumn);
 
-        return null;
+            int t = 8;
+        }
+
+        return highestId;
     }
 
-    // получить значение строки в самолете из 0-127
-    private int getRow_1(ArrayList<String> linesArrList) {
+    // получить идентификатор по указанным условиям
+    private int getHighestId_part1(int highestId, int desiredRow, int desiredColumn) {
 
-        final int sizeArrStr = linesArrList.size();
-        int earlyHalf = 0; // предыдущее значение половины
-        int currentHalf = 0; // текущая половина диапазона
+        // формула получения id по условию части 1
+        // id = row * 8 + column
+        int currentId = 0;
+        final int RATIO = 8; // коэффциент по условию задачи
+        currentId = desiredRow * RATIO + desiredColumn;
+        if(highestId < currentId){
+            highestId = currentId;
+        }
+        return highestId;
+    }
+
+    //
+
+    // получить значение столбца(ряда) для части 1
+    private int getColunm_1(String currentLine) {
+        int column = 0;
+
         int lower = 0;   //нижнее значение диапазона,
-        int upper = 0;   //верхнее значение диапазона.
+        int upper = 7;   //верхнее значение диапазона.
+        final int FROM = 7; // выделить из строки в 10 символов только нужные последнии 3
 
-        for (int indexStr = 0; indexStr < sizeArrStr; indexStr++) {
+        String currentStr = currentLine.substring(FROM);
 
+        // выбрать одно значение из каждой пары - пройти по отрезкам
+        column = chooseBetweenFBorLR(lower, upper, currentStr);
+        return column;
+    }
 
-            String currentStr = linesArrList.get(indexStr);
-            final int THREE = 3; // выделить из строки в 10 символов только нужные 7
-            final int SIZE_STR_F_B = currentStr.length() - THREE; // длина строки символов
+    // получить значение строки в самолете из 0-127,
+    private int getRow_1(String currentLine) {
 
+        int row = 0;
+        int lower = 0;   //нижнее значение диапазона,
+        int upper = 127;   //верхнее значение диапазона.
+        final int BEFORE = 3; // выделить из строки в 10 символов только нужные 7
 
-            for (int indexChar = 0; indexChar < SIZE_STR_F_B; indexChar++) {
+        // выбрать одно значение из каждой пары - пройти по отрезкам
+        String currentStr = currentLine.substring(0, currentLine.length() - BEFORE);
+        row = chooseBetweenFBorLR(lower, upper, currentStr);
 
+        return row;
+    }
 
-                    // если первая итерация, то значение предыдущей
-                    // половины все число строк, иначе пересохранить текущее значение в нее
-                    if (indexChar == 0) {
-                        earlyHalf = ROWS_ON_PLANE + ONE;
-                    } else {
-                        earlyHalf = currentHalf;
-                    }
-                    currentHalf = earlyHalf / TWO;
-                    char currentChar = currentStr.charAt(indexChar); // получить символ под текущим индексом
+    // логика выбора диаопазона на отрезке ( перебор значений между диапазонами)
+    private int chooseBetweenFBorLR(int lower, int upper, String currentStr) {
+        char[] charArr = currentStr.toCharArray();
 
+        // выбрать между F и B для строк, или между L и R для столбцов (рядов)
+        // при установке нижнего или верхнего предела всегда использовать формулу середины отрезка
+        for (char currentChar : charArr) {
+            if (currentChar == 'F' || currentChar == 'L') {
 
-                    //
-                    if (currentChar == 'F') {
-                        //lower не меняется
+                // формула середины отрезка(геометрия), округление всегда будет вниз
+                upper = (int) Math.floor((lower + upper) / TWO);
+            } else {
 
-                        // если впервый раз делается, то  верхнее значение это половина исходного наксимума
-                        if(indexChar == 0){
-                            upper = currentHalf - ONE;
-                        } else {
-                            upper = earlyHalf - ONE; // получить верхний предел диапазона
-                        }
-
-                    } else if (currentChar == 'B') {
-                        lower = currentHalf;
-                        upper = earlyHalf - ONE;
-                    }
-
-
+                // округление вверх
+                lower = (lower + upper) / TWO + ONE;
             }
         }
-        return 0;
+        // выбран один из 2 пределов, в теории они идентичны
+        return upper;
     }
 
     @Override
