@@ -3,12 +3,15 @@ package adventOfCode_2020.DAY5_20;
 import common.AocSolverAbstract;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 
 
 public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
 
     final int ONE = 1;  // учет 1 того, что числа считаются от 0 ONE= 1;
     final int TWO = 2;
+    ArrayList<Integer> idArrLis = new ArrayList<Integer>(); // хранение id
 
     @Override
     protected void prepareCommonData(ArrayList<String> linesArrList) {
@@ -22,7 +25,7 @@ public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
         int desiredRow = 0;
         int desiredColumn = 0;
         final int countLine = linesArrList.size();
-        int highestId = 0;
+        int seatID = 0;
 
         // пройти по всем строкам
         for (int indexLine = 0; indexLine < countLine; indexLine++) {
@@ -33,12 +36,10 @@ public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
             desiredColumn = getColunm_1(currentLine);
 
             // получить идентификатор по указанным условиям
-            highestId = getHighestId_part1(highestId, desiredRow, desiredColumn);
-
-            int t = 8;
+            seatID = getHighestId_part1(seatID, desiredRow, desiredColumn);
         }
 
-        return highestId;
+        return seatID;
     }
 
     // получить идентификатор по указанным условиям
@@ -46,10 +47,11 @@ public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
 
         // формула получения id по условию части 1
         // id = row * 8 + column
-        int currentId = 0;
-        final int RATIO = 8; // коэффциент по условию задачи
-        currentId = desiredRow * RATIO + desiredColumn;
-        if(highestId < currentId){
+        int currentId = 0; // для хранения вычисляемого id и сохранения их всеж во множество id
+        final int ROW_SEATS = 8; // коэффциент по условию задачи
+        currentId = desiredRow * ROW_SEATS + desiredColumn;
+        idArrLis.add(currentId);
+        if (highestId < currentId) {
             highestId = currentId;
         }
         return highestId;
@@ -100,7 +102,6 @@ public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
                 upper = (int) Math.floor((lower + upper) / TWO);
             } else {
 
-                // округление вверх
                 lower = (lower + upper) / TWO + ONE;
             }
         }
@@ -108,9 +109,33 @@ public class DAY5_20_implement extends AocSolverAbstract<Integer, Integer> {
         return upper;
     }
 
+    // метом в самолете является отсутствующее число в списке
     @Override
     protected Integer calculatePart2_Solution(ArrayList<String> linesArrList) {
-        return null;
+
+        int seatID = 0;
+        Collections.sort(idArrLis);
+
+        // работа с итератором, реализована в каждой коллекции
+        // позволяется итерироваться по любой коллекции
+        Iterator<Integer> iterator = idArrLis.iterator();
+        // сохранить два первых значени списка для начала сравнения в цикле
+        int currentId = iterator.next();
+        int nextId = iterator.next();
+        while (iterator.hasNext()) {
+            int subtraction = nextId - currentId;
+            if (subtraction != ONE) {
+                // искомое место на 1 больше предыдушего
+                seatID = currentId + ONE;
+                // обеспечит выход из цикла, можно и return сразу
+                break;
+            }
+            currentId = nextId;
+            nextId = iterator.next();
+        }
+
+        int test = 8;
+        return seatID;
     }
 }
 
