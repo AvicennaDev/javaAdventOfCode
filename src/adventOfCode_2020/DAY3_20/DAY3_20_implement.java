@@ -1,14 +1,12 @@
 package adventOfCode_2020.DAY3_20;
 
 import common.AocSolverAbstract;
-
-import java.io.IOException;
 import java.util.ArrayList;
 
-public class DAY3_20_implement extends AocSolverAbstract<Integer, Integer> {
+public class DAY3_20_implement extends AocSolverAbstract<Integer, Long> {
 
 
-    private char[][] mapThereArr;
+    private char[][] mapThereArr; // ? может дать путаницу с map
 
     // поля будут проинициализированы в функции подготовки данных
     private int row = 0;
@@ -20,7 +18,7 @@ public class DAY3_20_implement extends AocSolverAbstract<Integer, Integer> {
     @Override
     protected void prepareCommonData(ArrayList<String> linesArrList) {
         this.row = linesArrList.size();
-        char[] currentLineCharArr = linesArrList.get(0).toCharArray();
+        char[] currentLineCharArr = linesArrList.get(0).toCharArray(); // 0 тк необходимо узнать ширину по любой строчке
         this.column = currentLineCharArr.length;
         this.mapThereArr = new char[row][column];
 
@@ -39,69 +37,63 @@ public class DAY3_20_implement extends AocSolverAbstract<Integer, Integer> {
     // подсчитать количество попадений в деревья "#"
     @Override
     protected Integer calculatePart1_Solution(ArrayList<String> linesArrList) {
-        prepareCommonData(linesArrList);
-        int stepRight = 3; // шаг вправо по строке
-        int stepDown = 1;
-        if (getCountThree(stepRight, stepDown)) {
-            return countThree; // ????
+        final int STEP_RIGHT = 3; // шаг вправо по строке
+        final int STEP_DOWN = 1;
+        if (getCountThree(STEP_RIGHT, STEP_DOWN)) {
+            return countThree;
         }
         return countThree;
     }
 
+    // Часть 2
+    // Движение с разными шагами вправо и вниз и произведение деревьев на каждую пару условий
+    // возвращает Long тк выходит за диапазон int(и даже обертка инта не меняет это)
     @Override
-    protected Integer calculatePart2_Solution(ArrayList<String> linesArrList) {
+    protected Long calculatePart2_Solution(ArrayList<String> linesArrList) {
 
+        final int[] STEP_RIGHT = {1, 3, 5, 7, 1}; // каждая ячека - шаг в право
+        final int[] STEP_DOWN = {1, 1, 1, 1, 2};  // каждая ячейка - шаг вниз
+        final int SIZE_ARR   = STEP_DOWN.length; // длина массива пар движений
+        long product = 1; //  каждое последующее произведение попавшихся деревьев. с 1, тк с 0 всегда будет 0
 
-        int[] stepRight = {1, 3, 5, 7, 1};
-        int[] stepDown = {1,1,1,1,2};
-        int sizeArr = 5;
-        int product = 1;
-        int[]test = new int[5];
-        int testPriduct = 0;
-
-        for(int indexArr = 0;indexArr < sizeArr ;indexArr++){
-
-            getCountThree(stepRight[indexArr], stepDown[indexArr]);
-            test[indexArr] = countThree;
+        // получить и перемножить все деревья для каждой пары шагов "вправо-вниз"
+        for (int indexArr = 0; indexArr < SIZE_ARR; indexArr++) {
+            getCountThree(STEP_RIGHT[indexArr], STEP_DOWN[indexArr]);
             product *= countThree;
-
         }
-        for (int i =0; i < sizeArr; i++){
-            testPriduct = test[0] * test[1] * test[2] * test[3] * test[4];
-        }
-        System.out.println("testPriduct = " + testPriduct);
-
         return product;
     }
 
+
+    // для обеих частей
     // Получить количество встреченных деревьев на карте по указанным параметрам
     // передвижения "#"
-    private boolean getCountThree(int stepRight, int stepDown) {
-        this.countThree = 0;
+    private boolean getCountThree(final int STEP_RIGHT, final int STEP_DOWN) {
+        this.countThree = 0; // важно для части 2, когда метод вызывается много раз
         for (int indexRow = 0; indexRow < this.row; ) {
 
-            char tree = '#';
+            final char TREE = '#';
 
             // проверить наличие дерева и посчитать их
             for (int indexColumn = 0; indexColumn < column; ) {
 
-                //System.out.println("row = " + indexRow + ", column = " + indexColumn);
+                // временно хранит текущий символ
                 char currentPositionChar = mapThereArr[indexRow][indexColumn];
-                //System.out.println("currentPositionChar " + currentPositionChar);
-                if (tree == currentPositionChar) {
+                // учет того, что сейчас в той ячейке, что и дерево т.е. врезался в дерево
+                if (TREE == currentPositionChar) {
                     countThree++;
                 }
 
                 // условие движения по карте.
                 // проверка за выход количества столбцов, при наличии будующего выхода за предел
                 // прокрутить точку отчета столбцов до начала
-                if ((indexColumn + stepRight) > column) {
-                    // логика: предконец + stepRight -  column
-                    indexColumn = (indexColumn + stepRight) - column;
+                if ((indexColumn + STEP_RIGHT) > column) {
+                    // логика: предконец + stepRight -  column, column = всего столбцов (ширина)
+                    indexColumn = (indexColumn + STEP_RIGHT) - column;
                 } else {
-                    indexColumn += stepRight;
+                    indexColumn += STEP_RIGHT;
                 }
-                indexRow += stepDown;
+                indexRow += STEP_DOWN;
 
                 // проверить выхождение за количетсво строк
                 if (indexRow >= this.row) {
@@ -109,8 +101,7 @@ public class DAY3_20_implement extends AocSolverAbstract<Integer, Integer> {
                 }
             }
         }
-        return false;
+        return true;
     }
-
 
 }
