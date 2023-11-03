@@ -51,7 +51,7 @@ public class DAY3_20_implement extends AocSolverAbstract<Integer, Long> {
     @Override
     protected Long calculatePart2_Solution(ArrayList<String> linesArrList) {
 
-        final int[] STEP_RIGHT = {1, 3, 5, 7, 1}; // каждая ячека - шаг в право
+        final int[] STEP_RIGHT = {1, 3, 5, 7, 1}; // каждая ячейка - шаг в право
         final int[] STEP_DOWN = {1, 1, 1, 1, 2};  // каждая ячейка - шаг вниз
         final int SIZE_ARR   = STEP_DOWN.length; // длина массива пар движений
         long product = 1; //  каждое последующее произведение попавшихся деревьев. с 1, тк с 0 всегда будет 0
