@@ -1,162 +1,137 @@
-package adventOfCode_2020.DAY8_20;
+package adventOfCode_2020.day9_20;
 
 import common.AocSolverAbstract;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import static java.lang.Math.*;
+public class DAY9_20_implement extends AocSolverAbstract<Long, Long> {
 
-public class DAY8_20_implement extends AocSolverAbstract<Integer, Integer> {
+    private  int preamble = 25; // количество символов, что берем из списка чисел (5, 25). Меняется во 2 части много раз
+    private ArrayList<XMAS> allObjXMAS = new ArrayList<XMAS>(); // Меняется во 2 части много раз
+    long invalid = 0; // хранит число из 1 части
 
-    // map  для хранения объектов "инструкции"
-    private Map<Integer, Instruction> instractionMap = new HashMap<Integer, Instruction>();
-
-    // количество объектов в map, -1 тк размер коллекции считается с 1
-    private int accumulator; // хранит значение аккомулятора, которое нужно подсчитать
-    final String JMP = "jmp";
-    final String NOP = "nop";
-    private int countInstruction; //  инициализация происходит позже
-    private int step = 0;         // step указатель на текущий объект (равен его id)
-    private int sumAccumulatorInLastInstruction = 0; // хранит значение на момент прохода через последний оператор в списке
-    boolean isPart2 = false; // для запуска внутри кода для 1 части кода для 2 части
-
-
-    // сохранить строки в объекты "инструкция"
-    // сохранить объекты в map
+    // сохранить все выборки преамбулы-маска
     @Override
     protected void prepareCommonData(ArrayList<String> linesArrList) {
 
-        Instruction currentInsractionObj;
-        // индекс строки будет ключом в map для каждого объекта, его же id
-        for (int indexLine = 0; indexLine < linesArrList.size(); indexLine++) {
+        XMAS currentXMAS_Obj;
+        final int CONDITION = linesArrList.size() - preamble; // аналог   (2^(длина/преамбула)) - 1
+        for (int indexLine = 0; indexLine < CONDITION; indexLine++) {
+            currentXMAS_Obj = new XMAS();
 
-            currentInsractionObj = new Instruction();
-            currentInsractionObj.setId(indexLine);
+            // заполнить преамбулу значениями, условие выхода учитывает смещение по списку на 1
+            for (int indexPreamble = indexLine; indexPreamble < indexLine + preamble; indexPreamble++) {
+                Long currentDigit = getDigitLong(linesArrList, indexPreamble);
+                currentXMAS_Obj.preambleArrLis.add(currentDigit);
+            }
 
-            // разложение строки на составляющие
-            String currentStr = linesArrList.get(indexLine);
-            String currentOperation = currentStr.substring(0, 3); // взять 3 первые символа для сохранения операции "nop +0"
-            currentInsractionObj.setOperation(currentOperation);
-            currentStr = currentStr.substring(4); // взять строку от пробела, для сохранения аргумента "nop +0"
-            int currentArgument = Integer.parseInt(currentStr); //  знак +/- будет учтен
-            currentInsractionObj.setArgument(currentArgument);
+            // учесть следующее за преамбулой число,  указывает на ИНДЕКС массива
+            currentXMAS_Obj.setMask(getDigitLong(linesArrList, preamble + indexLine));
 
-            instractionMap.put(indexLine, currentInsractionObj);
+            // сохранить объект
+            allObjXMAS.add(currentXMAS_Obj);
         }
-        countInstruction = instractionMap.size() - 1;
     }
 
-    // часть 1: Движение по бесконечному циклу, остановится перед первым повтором операции в инструкции(объекте)
+    // создать число из строки
+    private Long getDigitLong(ArrayList<String> linesArrList, int indexPreamble) {
+        return Long.valueOf(linesArrList.get(indexPreamble));
+    }
+
+    // часть 1: Найти не действительное число, находя два числа которые дадут в сумме указанное число (mask)
     @Override
-    protected Integer calculatePart1_Solution(ArrayList<String> linesArrList) {
-        accumulator = 0; // инициализация в методе т.к. используется в каждой части, но глобальная
+    protected Long calculatePart1_Solution(ArrayList<String> linesArrList) {
 
-        // дойти до первого повтора, заполняя accumulator
-        findRepetition();
-        return accumulator;
-    }
+        // Пройти по всем объектам
+        for (int indexObj = 0; indexObj < allObjXMAS.size(); indexObj++) {
 
-    // выйти при первом повторе или после применения последнего оператора
-    private void findRepetition() {
-        do {
-            // для второй части
-            if ((step == countInstruction) && isPart2) {
+            // заполнить  HashMap уникальными значениями  из всей коллекции
+            Map<Long, Integer> currentPreambleMap = new HashMap<Long, Integer>();
 
-                // если текущая инструкция содержит "acc" то добавить ее содержимое
-                if(instractionMap.get(step).getOperation().equals("acc")){
-                    accumulator += instractionMap.get(step).getArgument();
+            int indexDiginInArr = 0;
+            for (Long currentDigit : allObjXMAS.get(indexObj).getPreambleArrLis()) {
+                currentPreambleMap.put(currentDigit, indexDiginInArr);
+                // !!!! Сохраняет последний индекс из двух идентичных
+                // ? переопределить метод сохранения, но не нужно тк индекс не используется
+                indexDiginInArr++;
+            }
+
+            // проитерироваться по map в поисках двух чисел
+            Long currentMask = allObjXMAS.get(indexObj).getMask();
+            int indexXMAS = 0; // для учета длины map
+            for (Long currentDigit : currentPreambleMap.keySet()) {
+                long currentDiff = currentMask - currentDigit;
+
+
+                 // если маска есть суммма двух, то прервать цикл
+                if (currentPreambleMap.containsKey(currentDiff) && currentDiff != currentDigit) {  // исключить сложение одинаковых чисел
+                    break;
+                    // если конец и нет нужного числа то возврат маски
+                } else if (indexXMAS == currentPreambleMap.size() - 1) {
+                    invalid = currentMask;
+                    return currentMask; // выедет то число
                 }
-                sumAccumulatorInLastInstruction = accumulator ;
-                break;
+                indexXMAS++;
             }
-            step = getStep(step);
-            //  продолжить до появления повтора
-
-        } while (instractionMap.get(step).getIsSecondBool());
-        step = 0;         // step указатель на текущий объект (равен его id)
-    }
-
-    //  Определяет место, с которого начнется движение по объектам, id следующего объекта-инструкции
-    private int getStep(int step) {
-
-        Instruction currentObj = instractionMap.get(step);
-
-        String currentOperationStr = currentObj.getOperation(); // для однократного обращения к этому полю
-        int argumentObj = currentObj.getArgument();
-
-        // отметка у объекта, что он будет использован
-        currentObj.setIsSecondBool(false);
-
-        // изменяется информация о повторе и currentId
-        if (currentOperationStr.equals(NOP)) {
-
-            step++;
-        } else if (currentOperationStr.equals(JMP)) {
-
-            // если число не выходит за пределы списка(количества id) или он же - размер map
-            if (0 <= step && countInstruction >= step) {
-                step += argumentObj;
-            } else {
-                step = abs((-currentObj.getId()) + (argumentObj % countInstruction));
-            }
-        } else {
-            accumulator += argumentObj;
-            step++;
         }
-        return step;
+        return null;
     }
 
 
-    //  часть 2 : движение до первого значения больше количества инструкций (объектов)
+    //  часть 2 : Найти последовательную группу чисел, что дадут недействительное число из прошлого решения
     @Override
-    protected Integer calculatePart2_Solution(ArrayList<String> linesArrList) {
+    protected Long calculatePart2_Solution(ArrayList<String> linesArrList) {
 
-        Instruction currentObj;
 
-        //accumulator = 0; // инициализация в методе т.к. используется в каждой части, но глобальная
-        isPart2 = true; // для запуска второй части в фукции для первой
+        // пройти с увеличение размера преамбулы
+        for(int currentSizePreamble = 2; currentSizePreamble < linesArrList.size(); currentSizePreamble++ ) {
 
-        for (int indexObj = 0; indexObj < countInstruction; indexObj++) {
-            accumulator = 0; // инициализация в методе т.к. используется в каждой части, но глобальная
+            // переопределить преамбулу
+            this.preamble = currentSizePreamble; // неявное преобразование, но currentSizePreamble всегда будет int
 
-            // итерация по коллекции map, вернуть исходное значение в поле IsSecondBool
-            fastBackIsRepetition();
-             currentObj = instractionMap.get(indexObj);
+            // переопределить коллекцию объектов allObjXMAS
+            allObjXMAS.clear();
 
-            // выполнить замену поля "операция" в объекте
-            changeOperatorInInstuction(currentObj);
+            // группировать по 2, по 3, по 4 и тд
+            prepareCommonData(linesArrList);
 
-            // определить на какой позиции
-            findRepetition();
-            if(sumAccumulatorInLastInstruction != 0){
-                break;
+            // пройти по коллеции текущего объекта, так по всем объектам
+            for (int indexObj = 0; indexObj < allObjXMAS.size(); indexObj++) {
+
+                long currentSum = allObjXMAS.get(indexObj).getSumInPreambleArrLis();
+
+                // сравнить сумму вошедших в коллекцию чисел с invalid
+                if (invalid == currentSum) {
+
+                    // найти min max в коллекции
+                    long maxDigit = Collections.max(allObjXMAS.get(indexObj).preambleArrLis);
+                    long minDigit = Collections.min(allObjXMAS.get(indexObj).preambleArrLis);
+
+                    long weakness = maxDigit + minDigit;
+                    return weakness;
+
+                }
             }
-
-            // восстановить значение поля "операция" в объекте
-            changeOperatorInInstuction(currentObj);
-
         }
-
-        return sumAccumulatorInLastInstruction;
-    }
-
-    // итерация по коллекции map, вернуть исходное значение в поле IsSecondBool
-    private void fastBackIsRepetition() {
-        Instruction currentObj;
-        for(int indexInstruction = 0; indexInstruction < instractionMap.size(); indexInstruction++){
-            currentObj = instractionMap.get(indexInstruction);
-            currentObj.setIsSecondBool(true);
-        }
-    }
-
-    // выполнить замену поля "операция" в объекте
-    private void changeOperatorInInstuction(Instruction currentObj) {
-          if (currentObj.getOperation().equals(NOP)) {
-            currentObj.setOperation(JMP);
-        } else if (currentObj.getOperation().equals(JMP)) {
-            currentObj.setOperation(NOP);
-        }
+        return null;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

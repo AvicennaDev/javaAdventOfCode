@@ -67,7 +67,7 @@ public class GroupParticipants {
             }
 
             // у каждого ли участника был этот ответ
-            // countCurrentAnswer должен соответствовать allPerson.size() количеству участниковпеш 
+            // countCurrentAnswer должен соответствовать allPerson.size() количеству участниковпеш
             // сохранить значение в переменную sumIdenticalAnswers,
             // те подсчитать количество вопросов на которые ответили все
             if(countCurrentAnswer == allPerson.size()){
